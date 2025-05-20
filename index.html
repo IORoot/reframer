@@ -40,15 +40,14 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div id="videoInfo" class="mt-2 bg-gray-100 rounded-lg p-2 text-sm text-gray-700">
-                                <div class="flex justify-between">
-                                    <span id="videoResolution"></span>
-                                    <span id="videoDuration"></span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span id="videoFps"></span>
-                                    <span id="videoSize"></span>
-                                </div>
+                            <div id="videoInfo" class="mt-2 bg-gray-100 rounded-lg p-2 text-sm text-gray-700 font-mono hidden">
+                                <span id="videoResolution"></span>
+                                <span class="mx-2">•</span>
+                                <span id="videoFps"></span>
+                                <span class="mx-2">•</span>
+                                <span id="videoDuration"></span>
+                                <span class="mx-2">•</span>
+                                <span id="videoSize"></span>
                             </div>
                         </div>
 
@@ -65,15 +64,14 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div id="outputVideoInfo" class="mt-2 bg-gray-100 rounded-lg p-2 text-sm text-gray-700">
-                                <div class="flex justify-between">
-                                    <span id="outputVideoResolution"></span>
-                                    <span id="outputVideoDuration"></span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span id="outputVideoFps"></span>
-                                    <span id="outputVideoSize"></span>
-                                </div>
+                            <div id="outputVideoInfo" class="mt-2 bg-gray-100 rounded-lg p-2 text-sm text-gray-700 font-mono hidden">
+                                <span id="outputVideoResolution"></span>
+                                <span class="mx-2">•</span>
+                                <span id="outputVideoFps"></span>
+                                <span class="mx-2">•</span>
+                                <span id="outputVideoDuration"></span>
+                                <span class="mx-2">•</span>
+                                <span id="outputVideoSize"></span>
                             </div>
                         </div>
                     </div>
@@ -338,6 +336,32 @@
             }`;
         }
 
+        // Helper function to calculate FPS
+        function calculateFPS(video) {
+            // Try to get FPS from video metadata
+            if (video.mozFrameRate) {
+                // Firefox
+                return video.mozFrameRate;
+            }
+            
+            // Try to get FPS from video track
+            const videoTrack = video.videoTracks?.[0];
+            if (videoTrack?.getSettings?.()?.frameRate) {
+                return videoTrack.getSettings().frameRate;
+            }
+            
+            // Try to get FPS from webkit properties
+            if (video.webkitVideoDecodedByteCount && video.duration) {
+                // This is a rough estimate based on decoded bytes
+                const bytesPerFrame = video.videoWidth * video.videoHeight * 1.5; // Assuming YUV420 format
+                const totalFrames = video.webkitVideoDecodedByteCount / bytesPerFrame;
+                return totalFrames / video.duration;
+            }
+            
+            // Default to 30fps if we can't determine
+            return 30;
+        }
+
         // Update video preview functionality
         async function updateVideoPreview(videoPath) {
             const previewVideo = document.getElementById('previewVideo');
@@ -364,24 +388,49 @@
                 // Wait for metadata to load
                 await new Promise((resolve) => {
                     previewVideo.onloadedmetadata = () => {
+                        // Show video info panel
+                        document.getElementById('videoInfo').classList.remove('hidden');
+                        
                         // Update video info
                         videoResolution.textContent = `${previewVideo.videoWidth}×${previewVideo.videoHeight}`;
-                        videoDuration.textContent = `${(previewVideo.duration / 60).toFixed(1)} min`;
-                        const fps = previewVideo.getVideoPlaybackQuality()?.totalVideoFrames / previewVideo.duration || 0;
-                        videoFps.textContent = `${fps.toFixed(1)} fps`;
-                        videoSize.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                        
+                        // Format duration as minutes:seconds
+                        const minutes = Math.floor(previewVideo.duration / 60);
+                        const seconds = Math.floor(previewVideo.duration % 60);
+                        videoDuration.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        // Calculate FPS
+                        let fps = calculateFPS(previewVideo);
+                        // Round to nearest standard frame rate
+                        const standardRates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
+                        const closest = standardRates.reduce((prev, curr) => {
+                            return Math.abs(curr - fps) < Math.abs(prev - fps) ? curr : prev;
+                        });
+                        fps = closest;
+                        videoFps.textContent = `${fps.toFixed(2)} fps`;
+                        
+                        // Format size with more precision
+                        const sizeMB = file.size / (1024 * 1024);
+                        videoSize.textContent = sizeMB >= 1000 
+                            ? `${(sizeMB / 1024).toFixed(2)} GB`
+                            : `${sizeMB.toFixed(2)} MB`;
+                        
                         resolve();
                     };
                 });
 
                 // Add play/pause overlay functionality
-                playPauseOverlay.addEventListener('click', () => {
-                    if (previewVideo.paused) {
-                        previewVideo.play();
-                        playPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-                    } else {
-                        previewVideo.pause();
-                        playPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                playPauseOverlay.addEventListener('click', async () => {
+                    try {
+                        if (previewVideo.paused) {
+                            await previewVideo.play();
+                            playPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                        } else {
+                            previewVideo.pause();
+                            playPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                        }
+                    } catch (error) {
+                        console.error('Error playing video:', error);
                     }
                 });
 
@@ -398,11 +447,13 @@
                     URL.revokeObjectURL(videoUrl);
                     previewVideo.classList.add('hidden');
                     playPauseOverlay.classList.add('hidden');
+                    document.getElementById('videoInfo').classList.add('hidden');
                 };
             } catch (error) {
                 console.error('Error updating video preview:', error);
                 previewVideo.classList.add('hidden');
                 playPauseOverlay.classList.add('hidden');
+                document.getElementById('videoInfo').classList.add('hidden');
             }
         }
 
@@ -677,26 +728,49 @@
                 // Wait for metadata to load
                 await new Promise((resolve) => {
                     outputVideo.onloadedmetadata = () => {
+                        // Show video info panel
+                        document.getElementById('outputVideoInfo').classList.remove('hidden');
+                        
                         // Update video info
                         outputResolution.textContent = `${outputVideo.videoWidth}×${outputVideo.videoHeight}`;
-                        outputDuration.textContent = `${(outputVideo.duration / 60).toFixed(1)} min`;
-                        const fps = outputVideo.getVideoPlaybackQuality()?.totalVideoFrames / outputVideo.duration || 0;
-                        outputFps.textContent = `${fps.toFixed(1)} fps`;
-                        outputSize.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                        
+                        // Format duration as minutes:seconds
+                        const minutes = Math.floor(outputVideo.duration / 60);
+                        const seconds = Math.floor(outputVideo.duration % 60);
+                        outputDuration.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        // Calculate FPS
+                        let fps = calculateFPS(outputVideo);
+                        // Round to nearest standard frame rate
+                        const standardRates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
+                        const closest = standardRates.reduce((prev, curr) => {
+                            return Math.abs(curr - fps) < Math.abs(prev - fps) ? curr : prev;
+                        });
+                        fps = closest;
+                        outputFps.textContent = `${fps.toFixed(2)} fps`;
+                        
+                        // Format size with more precision
+                        const sizeMB = file.size / (1024 * 1024);
+                        outputSize.textContent = sizeMB >= 1000 
+                            ? `${(sizeMB / 1024).toFixed(2)} GB`
+                            : `${sizeMB.toFixed(2)} MB`;
+                        
                         resolve();
                     };
                 });
 
                 // Add play/pause overlay functionality
-                newPlayPauseOverlay.addEventListener('click', () => {
-                    if (outputVideo.paused) {
-                        outputVideo.play().catch(error => {
-                            console.error('Error playing video:', error);
-                        });
-                        newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-                    } else {
-                        outputVideo.pause();
-                        newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                newPlayPauseOverlay.addEventListener('click', async () => {
+                    try {
+                        if (outputVideo.paused) {
+                            await outputVideo.play();
+                            newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                        } else {
+                            outputVideo.pause();
+                            newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                        }
+                    } catch (error) {
+                        console.error('Error playing video:', error);
                     }
                 });
 
@@ -713,11 +787,13 @@
                     URL.revokeObjectURL(videoUrl);
                     outputVideo.classList.add('hidden');
                     newPlayPauseOverlay.classList.add('hidden');
+                    document.getElementById('outputVideoInfo').classList.add('hidden');
                 };
             } catch (error) {
                 console.error('Error loading output video:', error);
                 outputVideo.classList.add('hidden');
                 outputPlayPauseOverlay.classList.add('hidden');
+                document.getElementById('outputVideoInfo').classList.add('hidden');
                 throw error;
             }
         }
