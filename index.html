@@ -34,23 +34,21 @@
                                 <video id="previewVideo" class="w-full h-full object-contain hidden" preload="metadata" controls>
                                     Your browser does not support the video tag.
                                 </video>
-                                <div id="videoInfo" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm transition-opacity duration-200 group-hover:opacity-0">
-                                    <div class="flex justify-between">
-                                        <span id="videoResolution"></span>
-                                        <span id="videoDuration"></span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span id="videoFps"></span>
-                                        <span id="videoSize"></span>
-                                    </div>
-                                </div>
-                                <button id="playPauseOverlay" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer hidden">
-                                    <div class="flex items-center justify-center w-full h-full">
-                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
+                                <button id="playPauseOverlay" class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer hidden rounded-full hover:bg-opacity-40">
+                                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
                                 </button>
+                            </div>
+                            <div id="videoInfo" class="mt-2 bg-gray-100 rounded-lg p-2 text-sm text-gray-700">
+                                <div class="flex justify-between">
+                                    <span id="videoResolution"></span>
+                                    <span id="videoDuration"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span id="videoFps"></span>
+                                    <span id="videoSize"></span>
+                                </div>
                             </div>
                         </div>
 
@@ -61,23 +59,21 @@
                                 <video id="outputVideo" class="w-full h-full object-contain hidden" preload="metadata" controls>
                                     Your browser does not support the video tag.
                                 </video>
-                                <div id="outputVideoInfo" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm transition-opacity duration-200 group-hover:opacity-0">
-                                    <div class="flex justify-between">
-                                        <span id="outputVideoResolution"></span>
-                                        <span id="outputVideoDuration"></span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span id="outputVideoFps"></span>
-                                        <span id="outputVideoSize"></span>
-                                    </div>
-                                </div>
-                                <button id="outputPlayPauseOverlay" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer hidden">
-                                    <div class="flex items-center justify-center w-full h-full">
-                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
+                                <button id="outputPlayPauseOverlay" class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer hidden rounded-full hover:bg-opacity-40">
+                                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
                                 </button>
+                            </div>
+                            <div id="outputVideoInfo" class="mt-2 bg-gray-100 rounded-lg p-2 text-sm text-gray-700">
+                                <div class="flex justify-between">
+                                    <span id="outputVideoResolution"></span>
+                                    <span id="outputVideoDuration"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span id="outputVideoFps"></span>
+                                    <span id="outputVideoSize"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -661,6 +657,10 @@
             const outputPlayPauseOverlay = document.getElementById('outputPlayPauseOverlay');
 
             try {
+                // Remove any existing event listeners
+                const newPlayPauseOverlay = outputPlayPauseOverlay.cloneNode(true);
+                outputPlayPauseOverlay.parentNode.replaceChild(newPlayPauseOverlay, outputPlayPauseOverlay);
+
                 // Create a File object from the path
                 const response = await fetch(`file://${videoPath}`);
                 const blob = await response.blob();
@@ -672,7 +672,7 @@
                 
                 // Show video element and play/pause overlay
                 outputVideo.classList.remove('hidden');
-                outputPlayPauseOverlay.classList.remove('hidden');
+                newPlayPauseOverlay.classList.remove('hidden');
                 
                 // Wait for metadata to load
                 await new Promise((resolve) => {
@@ -688,35 +688,37 @@
                 });
 
                 // Add play/pause overlay functionality
-                outputPlayPauseOverlay.addEventListener('click', () => {
+                newPlayPauseOverlay.addEventListener('click', () => {
                     if (outputVideo.paused) {
-                        outputVideo.play();
-                        outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                        outputVideo.play().catch(error => {
+                            console.error('Error playing video:', error);
+                        });
+                        newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
                     } else {
                         outputVideo.pause();
-                        outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                        newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
                     }
                 });
 
                 // Update overlay button when video plays/pauses
                 outputVideo.addEventListener('play', () => {
-                    outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                    newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
                 });
                 outputVideo.addEventListener('pause', () => {
-                    outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                    newPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
                 });
                 
                 // Clean up object URL when video is unloaded
                 outputVideo.onunload = () => {
                     URL.revokeObjectURL(videoUrl);
                     outputVideo.classList.add('hidden');
-                    outputPlayPauseOverlay.classList.add('hidden');
+                    newPlayPauseOverlay.classList.add('hidden');
                 };
             } catch (error) {
                 console.error('Error loading output video:', error);
                 outputVideo.classList.add('hidden');
                 outputPlayPauseOverlay.classList.add('hidden');
-                throw error; // Re-throw the error so the caller knows it failed
+                throw error;
             }
         }
 
