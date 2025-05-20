@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.btn {
+    @apply rounded px-4 py-2 font-medium transition-colors;
+}
+
+.btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+}
+
+.input {
+    @apply rounded border border-gray-300 px-2 py-1 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Debug panel styles */
+.debug-panel .info {
+    @apply text-gray-300;
+}
+
+.debug-panel .error {
+    @apply text-red-400;
+}
+
+.debug-panel .success {
+    @apply text-green-400;
+} 

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reframe - Video Reframing Tool</title>
+    <link href="./styles.css" rel="stylesheet">
+</head>
+<body class="font-sans bg-gray-100 m-0 p-0 h-screen flex">
+    <div class="flex w-full h-full">
+        <!-- Left side: Video preview -->
+        <div class="w-2/3 h-full p-5 flex flex-col">
+            <h1 class="text-2xl font-bold mb-4">Reframer</h1>
+            
+            <!-- Video preview container -->
+            <div id="videoPreview" class="flex-1 flex flex-col">
+                <div class="bg-stone-900 p-8 rounded-lg flex-1 flex flex-col">
+                    <!-- Video tabs navigation -->
+                    <div class="border-b border-gray-700 mb-4">
+                        <nav class="flex" aria-label="Video Tabs">
+                            <button class="video-tab-button flex-1 py-2 px-4 border-b-2 border-blue-500 font-medium text-sm text-blue-400 text-center" data-tab="input">
+                                Input Video
+                            </button>
+                            <button class="video-tab-button flex-1 py-2 px-4 border-b-2 border-transparent font-medium text-sm text-gray-400 hover:text-gray-300 hover:border-gray-600 text-center" data-tab="output">
+                                Output Video
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Video tab content -->
+                    <div class="video-tab-content flex-1 flex flex-col">
+                        <!-- Input video tab -->
+                        <div id="input-video-tab" class="video-tab-pane flex-1 flex flex-col">
+                            <div class="relative bg-black rounded-lg overflow-hidden group flex-1" style="aspect-ratio: 16/9;">
+                                <div class="absolute inset-0"></div>
+                                <video id="previewVideo" class="w-full h-full object-contain hidden" preload="metadata" controls>
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div id="videoInfo" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm transition-opacity duration-200 group-hover:opacity-0">
+                                    <div class="flex justify-between">
+                                        <span id="videoResolution"></span>
+                                        <span id="videoDuration"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span id="videoFps"></span>
+                                        <span id="videoSize"></span>
+                                    </div>
+                                </div>
+                                <button id="playPauseOverlay" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer hidden">
+                                    <div class="flex items-center justify-center w-full h-full">
+                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Output video tab -->
+                        <div id="output-video-tab" class="video-tab-pane hidden flex-1 flex flex-col">
+                            <div class="relative bg-black rounded-lg overflow-hidden group flex-1" style="aspect-ratio: 16/9;">
+                                <div class="absolute inset-0"></div>
+                                <video id="outputVideo" class="w-full h-full object-contain hidden" preload="metadata" controls>
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div id="outputVideoInfo" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm transition-opacity duration-200 group-hover:opacity-0">
+                                    <div class="flex justify-between">
+                                        <span id="outputVideoResolution"></span>
+                                        <span id="outputVideoDuration"></span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span id="outputVideoFps"></span>
+                                        <span id="outputVideoSize"></span>
+                                    </div>
+                                </div>
+                                <button id="outputPlayPauseOverlay" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer hidden">
+                                    <div class="flex items-center justify-center w-full h-full">
+                                        <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side: Settings panel -->
+        <div class="w-1/3 h-full bg-white border-l border-gray-200 flex flex-col">
+            <!-- Status notification -->
+            <div id="status" class="hidden p-2.5 border-b border-gray-200"></div>
+
+            <!-- File selection section -->
+            <div class="p-5 border-b border-gray-200">
+                <div class="space-y-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <input type="text" id="filePath" readonly placeholder="Select a video file..." class="flex-grow px-2 py-2 border border-gray-300 rounded bg-gray-50">
+                        <button id="selectFile" class="btn btn-primary">Browse</button>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <input type="text" id="outputDir" readonly placeholder="Select output directory..." class="flex-grow px-2 py-2 border border-gray-300 rounded bg-gray-50">
+                        <button id="selectOutputDir" class="btn btn-primary">Browse</button>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <label for="outputFilename" class="min-w-[150px] font-medium">Output Filename:</label>
+                        <input type="text" id="outputFilename" placeholder="Enter output filename (without extension)" class="input flex-grow">
+                        <span class="text-sm text-gray-600 italic">(Optional)</span>
+                    </div>
+                    <div class="flex gap-2.5">
+                        <button id="processButton" disabled class="btn btn-primary flex-grow disabled:bg-gray-300 disabled:cursor-not-allowed">Process Video</button>
+                        <button id="cancelButton" class="btn btn-secondary hidden">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings section -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Processing Settings</h2>
+                    </div>
+                    
+                    <!-- Tabs navigation -->
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex justify-between" aria-label="Settings Tabs">
+                            <button class="tab-button flex-1 py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600 text-center" data-tab="basic">
+                                Basic Settings
+                            </button>
+                            <button class="tab-button flex-1 py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 text-center" data-tab="detection">
+                                Detection Settings
+                            </button>
+                            <button class="tab-button flex-1 py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 text-center" data-tab="crop">
+                                Crop Settings
+                            </button>
+                            <button class="tab-button flex-1 py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 text-center" data-tab="features">
+                                Feature Toggles
+                            </button>
+                            <button class="tab-button flex-1 py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 text-center" data-tab="smoothing">
+                                Smoothing Settings
+                            </button>
+                            <button class="tab-button flex-1 py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 text-center" data-tab="debug">
+                                Debug
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab content -->
+                    <div class="tab-content">
+                        <!-- Basic Settings Tab -->
+                        <div id="basic-tab" class="tab-pane">
+                            <div class="space-y-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <label for="targetRatio" class="min-w-[150px] font-medium">Target Aspect Ratio:</label>
+                                    <input type="number" id="targetRatio" value="0.75" step="0.01" min="0.1" max="2.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(0.75 = 4:3, 0.5625 = 16:9, 1.0 = 1:1)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label class="min-w-[150px] font-medium">Calculate Ratio:</label>
+                                    <div class="flex items-center gap-3 bg-gray-50 p-2 rounded border border-gray-200">
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" id="widthInput" placeholder="Width" class="input w-28 bg-white" min="1">
+                                            <span class="text-gray-600 font-medium">×</span>
+                                            <input type="number" id="heightInput" placeholder="Height" class="input w-28 bg-white" min="1">
+                                        </div>
+                                        <button id="calculateRatio" class="btn btn-secondary text-sm px-4 ml-2">Calculate</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="maxWorkers" class="min-w-[150px] font-medium">Max Workers:</label>
+                                    <input type="number" id="maxWorkers" value="6" min="1" max="32" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Number of CPU cores to use)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detection Settings Tab -->
+                        <div id="detection-tab" class="tab-pane hidden">
+                            <div class="space-y-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <label for="detector" class="min-w-[150px] font-medium">Detector Model:</label>
+                                    <select id="detector" class="input w-24 bg-white" disabled>
+                                        <option value="yolo" selected>YOLO</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="skipFrames" class="min-w-[150px] font-medium">Skip Frames:</label>
+                                    <input type="number" id="skipFrames" value="10" min="0" max="100" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Process every Nth frame)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="confThreshold" class="min-w-[150px] font-medium">Confidence Threshold:</label>
+                                    <input type="number" id="confThreshold" value="0.4" step="0.1" min="0.1" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(0.0 to 1.0)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="modelSize" class="min-w-[150px] font-medium">Model Size:</label>
+                                    <select id="modelSize" class="input w-24 bg-white">
+                                        <option value="n">Nano (Fastest)</option>
+                                        <option value="s">Small</option>
+                                        <option value="m">Medium</option>
+                                        <option value="l">Large</option>
+                                        <option value="x" selected>XLarge (Most Accurate)</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="objectClasses" class="min-w-[150px] font-medium">Object Classes:</label>
+                                    <input type="text" id="objectClasses" value="0" placeholder="0,1,2" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Comma-separated, 0=person)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="trackCount" class="min-w-[150px] font-medium">Track Count:</label>
+                                    <input type="number" id="trackCount" value="1" min="1" max="10" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Number of objects to track)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Crop Settings Tab -->
+                        <div id="crop-tab" class="tab-pane hidden">
+                            <div class="space-y-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <label for="paddingRatio" class="min-w-[150px] font-medium">Padding Ratio:</label>
+                                    <input type="number" id="paddingRatio" value="0.1" step="0.01" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Space around detected objects)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="sizeWeight" class="min-w-[150px] font-medium">Size Weight:</label>
+                                    <input type="number" id="sizeWeight" value="0.4" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Importance of object size)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="centerWeight" class="min-w-[150px] font-medium">Center Weight:</label>
+                                    <input type="number" id="centerWeight" value="0.3" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Importance of center position)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="motionWeight" class="min-w-[150px] font-medium">Motion Weight:</label>
+                                    <input type="number" id="motionWeight" value="0.3" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Importance of object motion)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="historyWeight" class="min-w-[150px] font-medium">History Weight:</label>
+                                    <input type="number" id="historyWeight" value="0.1" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Importance of object history)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="saliencyWeight" class="min-w-[150px] font-medium">Saliency Weight:</label>
+                                    <input type="number" id="saliencyWeight" value="0.4" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Importance of visual saliency)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Toggles Tab -->
+                        <div id="features-tab" class="tab-pane hidden">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" id="faceDetection" class="m-0">
+                                    <label for="faceDetection" class="ml-1.5">Face Detection</label>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" id="weightedCenter" class="m-0">
+                                    <label for="weightedCenter" class="ml-1.5">Weighted Center</label>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" id="blendSaliency" class="m-0">
+                                    <label for="blendSaliency" class="ml-1.5">Blend Saliency</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smoothing Settings Tab -->
+                        <div id="smoothing-tab" class="tab-pane hidden">
+                            <div class="space-y-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" id="applySmoothing" checked class="m-0">
+                                    <label for="applySmoothing" class="ml-1.5">Apply Temporal Smoothing</label>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="smoothingWindow" class="min-w-[150px] font-medium">Smoothing Window:</label>
+                                    <input type="number" id="smoothingWindow" value="30" min="1" max="100" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(Frames for smoothing)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="positionInertia" class="min-w-[150px] font-medium">Position Inertia:</label>
+                                    <input type="number" id="positionInertia" value="0.8" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(How much position sticks to previous frame)</span>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <label for="sizeInertia" class="min-w-[150px] font-medium">Size Inertia:</label>
+                                    <input type="number" id="sizeInertia" value="0.9" step="0.1" min="0" max="1.0" class="input w-24">
+                                    <span class="text-sm text-gray-600 italic">(How much size sticks to previous frame)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Debug Tab -->
+                        <div id="debug-tab" class="tab-pane hidden">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" id="debug" class="m-0">
+                                    <label for="debug" class="ml-1.5">Debug Mode</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debug panel (collapsible) -->
+            <div class="debug-panel hidden border-t border-gray-200">
+                <div class="flex justify-between items-center p-2.5 bg-[#2d2d2d] border-b border-gray-200">
+                    <h3 class="m-0 text-white text-base">Python Output</h3>
+                    <div class="flex items-center gap-2">
+                        <button id="toggleDebug" class="px-2 py-1 bg-[#444] text-white border-none rounded cursor-pointer text-sm hover:bg-[#555]">Collapse</button>
+                        <button id="clearDebug" class="px-2 py-1 bg-[#444] text-white border-none rounded cursor-pointer text-sm hover:bg-[#555]">Clear</button>
+                    </div>
+                </div>
+                <pre id="debugOutput" class="m-0 p-4 max-h-[200px] overflow-y-auto whitespace-pre-wrap break-words text-sm leading-relaxed bg-[#1e1e1e] text-[#d4d4d4] font-mono"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const selectFileButton = document.getElementById('selectFile');
+        const selectOutputDirButton = document.getElementById('selectOutputDir');
+        const processButton = document.getElementById('processButton');
+        const filePathInput = document.getElementById('filePath');
+        const outputDirInput = document.getElementById('outputDir');
+        const outputFilenameInput = document.getElementById('outputFilename');
+        const statusDiv = document.getElementById('status');
+        const cancelButton = document.getElementById('cancelButton');
+        let currentProcess = null;
+
+        function showStatus(message, type) {
+            statusDiv.innerHTML = message.replace(/\n/g, '<br>');
+            statusDiv.classList.remove('hidden');
+            statusDiv.className = `p-2.5 border-b border-gray-200 ${
+                type === 'success' ? 'bg-green-50 text-green-800' : 
+                type === 'error' ? 'bg-red-50 text-red-800' : 
+                'bg-yellow-50 text-yellow-800'
+            }`;
+        }
+
+        // Update video preview functionality
+        async function updateVideoPreview(videoPath) {
+            const previewVideo = document.getElementById('previewVideo');
+            const videoResolution = document.getElementById('videoResolution');
+            const videoDuration = document.getElementById('videoDuration');
+            const videoFps = document.getElementById('videoFps');
+            const videoSize = document.getElementById('videoSize');
+            const playPauseOverlay = document.getElementById('playPauseOverlay');
+
+            try {
+                // Create a File object from the path
+                const response = await fetch(`file://${videoPath}`);
+                const blob = await response.blob();
+                const file = new File([blob], videoPath.split('/').pop(), { type: blob.type });
+                
+                // Create object URL for the video
+                const videoUrl = URL.createObjectURL(file);
+                previewVideo.src = videoUrl;
+                
+                // Show video element and play/pause overlay
+                previewVideo.classList.remove('hidden');
+                playPauseOverlay.classList.remove('hidden');
+                
+                // Wait for metadata to load
+                await new Promise((resolve) => {
+                    previewVideo.onloadedmetadata = () => {
+                        // Update video info
+                        videoResolution.textContent = `${previewVideo.videoWidth}×${previewVideo.videoHeight}`;
+                        videoDuration.textContent = `${(previewVideo.duration / 60).toFixed(1)} min`;
+                        const fps = previewVideo.getVideoPlaybackQuality()?.totalVideoFrames / previewVideo.duration || 0;
+                        videoFps.textContent = `${fps.toFixed(1)} fps`;
+                        videoSize.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                        resolve();
+                    };
+                });
+
+                // Add play/pause overlay functionality
+                playPauseOverlay.addEventListener('click', () => {
+                    if (previewVideo.paused) {
+                        previewVideo.play();
+                        playPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                    } else {
+                        previewVideo.pause();
+                        playPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                    }
+                });
+
+                // Update overlay button when video plays/pauses
+                previewVideo.addEventListener('play', () => {
+                    playPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                });
+                previewVideo.addEventListener('pause', () => {
+                    playPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                });
+                
+                // Clean up object URL when video is unloaded
+                previewVideo.onunload = () => {
+                    URL.revokeObjectURL(videoUrl);
+                    previewVideo.classList.add('hidden');
+                    playPauseOverlay.classList.add('hidden');
+                };
+            } catch (error) {
+                console.error('Error updating video preview:', error);
+                previewVideo.classList.add('hidden');
+                playPauseOverlay.classList.add('hidden');
+            }
+        }
+
+        // Update file selection handler
+        selectFileButton.addEventListener('click', async () => {
+            const filePath = await window.electronAPI.selectFile();
+            if (filePath) {
+                filePathInput.value = filePath;
+                // Set default output directory to same as input file
+                const defaultOutputDir = filePath.substring(0, filePath.lastIndexOf('/'));
+                outputDirInput.value = defaultOutputDir;
+                await updateVideoPreview(filePath);
+                processButton.disabled = false;
+            }
+        });
+
+        selectOutputDirButton.addEventListener('click', async () => {
+            const dirPath = await window.electronAPI.selectDirectory();
+            if (dirPath) {
+                outputDirInput.value = dirPath;
+            }
+        });
+
+        // Add event listeners for all settings
+        const settings = {
+            targetRatio: document.getElementById('targetRatio'),
+            maxWorkers: document.getElementById('maxWorkers'),
+            detector: document.getElementById('detector'),
+            skipFrames: document.getElementById('skipFrames'),
+            confThreshold: document.getElementById('confThreshold'),
+            modelSize: document.getElementById('modelSize'),
+            objectClasses: document.getElementById('objectClasses'),
+            trackCount: document.getElementById('trackCount'),
+            paddingRatio: document.getElementById('paddingRatio'),
+            sizeWeight: document.getElementById('sizeWeight'),
+            centerWeight: document.getElementById('centerWeight'),
+            motionWeight: document.getElementById('motionWeight'),
+            historyWeight: document.getElementById('historyWeight'),
+            saliencyWeight: document.getElementById('saliencyWeight'),
+            faceDetection: document.getElementById('faceDetection'),
+            weightedCenter: document.getElementById('weightedCenter'),
+            blendSaliency: document.getElementById('blendSaliency'),
+            applySmoothing: document.getElementById('applySmoothing'),
+            smoothingWindow: document.getElementById('smoothingWindow'),
+            positionInertia: document.getElementById('positionInertia'),
+            sizeInertia: document.getElementById('sizeInertia'),
+            debug: document.getElementById('debug')
+        };
+
+        const debugPanel = document.querySelector('.debug-panel');
+        const debugOutput = document.getElementById('debugOutput');
+        const toggleDebugButton = document.getElementById('toggleDebug');
+        let isDebugExpanded = true;
+
+        toggleDebugButton.addEventListener('click', () => {
+            isDebugExpanded = !isDebugExpanded;
+            debugOutput.style.display = isDebugExpanded ? 'block' : 'none';
+            toggleDebugButton.textContent = isDebugExpanded ? 'Collapse' : 'Expand';
+        });
+
+        // Update debug panel visibility when debug mode is toggled
+        settings.debug.addEventListener('change', (e) => {
+            debugPanel.classList.toggle('hidden', !e.target.checked);
+            if (e.target.checked) {
+                isDebugExpanded = true;
+                debugOutput.style.display = 'block';
+                toggleDebugButton.textContent = 'Collapse';
+            }
+        });
+
+        processButton.addEventListener('click', async () => {
+            const videoPath = filePathInput.value;
+            const outputDir = outputDirInput.value;
+            const outputFilename = outputFilenameInput.value.trim();
+            
+            if (!videoPath || !outputDir) return;
+
+            // Show cancel button and hide process button
+            processButton.classList.add('hidden');
+            cancelButton.classList.remove('hidden');
+            
+            // Disable all inputs
+            processButton.disabled = true;
+            selectFileButton.disabled = true;
+            selectOutputDirButton.disabled = true;
+            outputFilenameInput.disabled = true;
+            
+            showStatus('Processing video...', 'processing');
+            clearDebugOutput();
+            appendDebugOutput('Starting video processing...', 'info');
+
+            try {
+                // Convert object classes string to array of numbers
+                const objectClassesArray = settings.objectClasses.value.split(',').map(x => parseInt(x.trim()));
+
+                // Show debug panel if debug mode is enabled
+                if (settings.debug.checked) {
+                    debugPanel.classList.remove('hidden');
+                }
+
+                // Set up listener for Python output
+                const pythonOutputHandler = (event, message) => {
+                    appendDebugOutput(message, 'info');
+                };
+                window.electronAPI.onPythonOutput(pythonOutputHandler);
+
+                // Set up listener for script completion
+                const scriptCompleteHandler = (event, result) => {
+                    // Remove both listeners
+                    window.electronAPI.removePythonOutputListener(pythonOutputHandler);
+                    window.electronAPI.removePythonScriptCompleteListener(scriptCompleteHandler);
+
+                    if (result.success) {
+                        showStatus(`Video processing completed successfully!\nOutput saved to: ${result.outputPath}`, 'success');
+                        appendDebugOutput('Processing completed successfully!', 'success');
+                        appendDebugOutput(`Output saved to: ${result.outputPath}`, 'success');
+                        // Load the output video and switch to its tab
+                        loadOutputVideo(result.outputPath).then(() => {
+                            switchVideoTab('output');
+                        });
+                    } else {
+                        showStatus(`Error: ${result.error}`, 'error');
+                        appendDebugOutput(`Error: ${result.error}`, 'error');
+                        if (result.stack) {
+                            appendDebugOutput(result.stack, 'error');
+                        }
+                    }
+
+                    // Reset UI state
+                    processButton.classList.remove('hidden');
+                    cancelButton.classList.add('hidden');
+                    processButton.disabled = false;
+                    selectFileButton.disabled = false;
+                    selectOutputDirButton.disabled = false;
+                    outputFilenameInput.disabled = false;
+                    currentProcess = null;
+                };
+                window.electronAPI.onPythonScriptComplete(scriptCompleteHandler);
+
+                currentProcess = await window.electronAPI.runPythonScript(videoPath, {
+                    output_dir: outputDir,
+                    output_filename: outputFilename,
+                    target_ratio: parseFloat(settings.targetRatio.value),
+                    max_workers: parseInt(settings.maxWorkers.value),
+                    detector: settings.detector.value,
+                    skip_frames: parseInt(settings.skipFrames.value),
+                    conf_threshold: parseFloat(settings.confThreshold.value),
+                    model_size: settings.modelSize.value,
+                    object_classes: objectClassesArray,
+                    track_count: parseInt(settings.trackCount.value),
+                    padding_ratio: parseFloat(settings.paddingRatio.value),
+                    size_weight: parseFloat(settings.sizeWeight.value),
+                    center_weight: parseFloat(settings.centerWeight.value),
+                    motion_weight: parseFloat(settings.motionWeight.value),
+                    history_weight: parseFloat(settings.historyWeight.value),
+                    saliency_weight: parseFloat(settings.saliencyWeight.value),
+                    face_detection: settings.faceDetection.checked,
+                    weighted_center: settings.weightedCenter.checked,
+                    blend_saliency: settings.blendSaliency.checked,
+                    apply_smoothing: settings.applySmoothing.checked,
+                    smoothing_window: parseInt(settings.smoothingWindow.value),
+                    position_inertia: parseFloat(settings.positionInertia.value),
+                    size_inertia: parseFloat(settings.sizeInertia.value),
+                    debug: settings.debug.checked
+                });
+            } catch (error) {
+                if (error.code === 'PROCESS_CANCELLED') {
+                    showStatus('Processing cancelled', 'error');
+                    appendDebugOutput('Processing cancelled by user', 'error');
+                } else {
+                    const errorMessage = error.error || error.message || 'An unknown error occurred';
+                    const errorDetails = error.stack ? `\n\nDetails: ${error.stack}` : '';
+                    showStatus(`Error: ${errorMessage}${errorDetails}`, 'error');
+                    appendDebugOutput(`Error: ${errorMessage}`, 'error');
+                    if (error.stack) {
+                        appendDebugOutput(error.stack, 'error');
+                    }
+                    console.error('Processing error:', error);
+                }
+
+                // Reset UI state
+                processButton.classList.remove('hidden');
+                cancelButton.classList.add('hidden');
+                processButton.disabled = false;
+                selectFileButton.disabled = false;
+                selectOutputDirButton.disabled = false;
+                outputFilenameInput.disabled = false;
+                currentProcess = null;
+            }
+        });
+
+        cancelButton.addEventListener('click', async () => {
+            appendDebugOutput('Cancelling processing...', 'info');
+            try {
+                const result = await window.electronAPI.cancelProcessing();
+                if (result.success) {
+                    showStatus('Processing cancelled', 'error');
+                    appendDebugOutput('Processing cancelled successfully', 'info');
+                } else {
+                    showStatus(`Failed to cancel: ${result.error}`, 'error');
+                    appendDebugOutput(`Failed to cancel: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error cancelling: ${error.message}`, 'error');
+                appendDebugOutput(`Error cancelling: ${error.message}`, 'error');
+            }
+        });
+
+        // Add tab functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        function switchTab(tabId) {
+            // Update tab buttons
+            tabButtons.forEach(button => {
+                if (button.dataset.tab === tabId) {
+                    button.classList.add('border-blue-500', 'text-blue-600');
+                    button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                } else {
+                    button.classList.remove('border-blue-500', 'text-blue-600');
+                    button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                }
+            });
+
+            // Update tab panes
+            tabPanes.forEach(pane => {
+                if (pane.id === `${tabId}-tab`) {
+                    pane.classList.remove('hidden');
+                } else {
+                    pane.classList.add('hidden');
+                }
+            });
+        }
+
+        // Add click handlers for tabs
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                switchTab(button.dataset.tab);
+            });
+        });
+
+        // Initialize with first tab
+        switchTab('basic');
+
+        // Update output video loading function
+        async function loadOutputVideo(videoPath) {
+            const outputVideo = document.getElementById('outputVideo');
+            const outputResolution = document.getElementById('outputVideoResolution');
+            const outputDuration = document.getElementById('outputVideoDuration');
+            const outputFps = document.getElementById('outputVideoFps');
+            const outputSize = document.getElementById('outputVideoSize');
+            const outputPlayPauseOverlay = document.getElementById('outputPlayPauseOverlay');
+
+            try {
+                // Create a File object from the path
+                const response = await fetch(`file://${videoPath}`);
+                const blob = await response.blob();
+                const file = new File([blob], videoPath.split('/').pop(), { type: blob.type });
+                
+                // Create object URL for the video
+                const videoUrl = URL.createObjectURL(file);
+                outputVideo.src = videoUrl;
+                
+                // Show video element and play/pause overlay
+                outputVideo.classList.remove('hidden');
+                outputPlayPauseOverlay.classList.remove('hidden');
+                
+                // Wait for metadata to load
+                await new Promise((resolve) => {
+                    outputVideo.onloadedmetadata = () => {
+                        // Update video info
+                        outputResolution.textContent = `${outputVideo.videoWidth}×${outputVideo.videoHeight}`;
+                        outputDuration.textContent = `${(outputVideo.duration / 60).toFixed(1)} min`;
+                        const fps = outputVideo.getVideoPlaybackQuality()?.totalVideoFrames / outputVideo.duration || 0;
+                        outputFps.textContent = `${fps.toFixed(1)} fps`;
+                        outputSize.textContent = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                        resolve();
+                    };
+                });
+
+                // Add play/pause overlay functionality
+                outputPlayPauseOverlay.addEventListener('click', () => {
+                    if (outputVideo.paused) {
+                        outputVideo.play();
+                        outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                    } else {
+                        outputVideo.pause();
+                        outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                    }
+                });
+
+                // Update overlay button when video plays/pauses
+                outputVideo.addEventListener('play', () => {
+                    outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+                });
+                outputVideo.addEventListener('pause', () => {
+                    outputPlayPauseOverlay.querySelector('svg').innerHTML = '<path d="M8 5v14l11-7z"/>';
+                });
+                
+                // Clean up object URL when video is unloaded
+                outputVideo.onunload = () => {
+                    URL.revokeObjectURL(videoUrl);
+                    outputVideo.classList.add('hidden');
+                    outputPlayPauseOverlay.classList.add('hidden');
+                };
+            } catch (error) {
+                console.error('Error loading output video:', error);
+                outputVideo.classList.add('hidden');
+                outputPlayPauseOverlay.classList.add('hidden');
+                throw error; // Re-throw the error so the caller knows it failed
+            }
+        }
+
+        // Add video tab functionality
+        const videoTabButtons = document.querySelectorAll('.video-tab-button');
+        const videoTabPanes = document.querySelectorAll('.video-tab-pane');
+
+        function switchVideoTab(tabId) {
+            // Update tab buttons
+            videoTabButtons.forEach(button => {
+                if (button.dataset.tab === tabId) {
+                    button.classList.add('border-blue-500', 'text-blue-400');
+                    button.classList.remove('border-transparent', 'text-gray-400', 'hover:text-gray-300', 'hover:border-gray-600');
+                } else {
+                    button.classList.remove('border-blue-500', 'text-blue-400');
+                    button.classList.add('border-transparent', 'text-gray-400', 'hover:text-gray-300', 'hover:border-gray-600');
+                }
+            });
+
+            // Update tab panes
+            videoTabPanes.forEach(pane => {
+                if (pane.id === `${tabId}-video-tab`) {
+                    pane.classList.remove('hidden');
+                } else {
+                    pane.classList.add('hidden');
+                }
+            });
+        }
+
+        // Add click handlers for video tabs
+        videoTabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                switchVideoTab(button.dataset.tab);
+            });
+        });
+
+        // Initialize with input video tab
+        switchVideoTab('input');
+
+        // Function to append text to debug output
+        function appendDebugOutput(text, type = 'info') {
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = text;
+            debugOutput.appendChild(line);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        // Function to clear debug output
+        function clearDebugOutput() {
+            debugOutput.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
