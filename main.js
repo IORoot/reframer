@@ -119,6 +119,21 @@ ipcMain.handle('select-file', async () => {
   return null;
 });
 
+// Handle multiple file selection
+ipcMain.handle('select-multiple-files', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Videos', extensions: ['mp4'] }
+    ]
+  });
+  
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths;
+  }
+  return null;
+});
+
 // Handle directory selection
 ipcMain.handle('select-directory', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -129,6 +144,32 @@ ipcMain.handle('select-directory', async () => {
     return result.filePaths[0];
   }
   return null;
+});
+
+// Get video files in directory
+ipcMain.handle('get-video-files-in-directory', async (event, dirPath, recursive = false) => {
+  try {
+    const videoFiles = [];
+    const processDirectory = async (dir) => {
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        
+        if (entry.isDirectory() && recursive) {
+          await processDirectory(fullPath);
+        } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.mp4')) {
+          videoFiles.push(fullPath);
+        }
+      }
+    };
+    
+    await processDirectory(dirPath);
+    return videoFiles;
+  } catch (error) {
+    console.error('Error getting video files:', error);
+    return null;
+  }
 });
 
 // Function to check if setup is needed

@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Reframe - Video Reframing Tool</title>
+    <title>RF-1 Reframer - Video Reframing Tool</title>
     <link href="./styles.css" rel="stylesheet">
 </head>
 <body class="font-sans bg-gray-100 m-0 p-0 h-screen flex">
     <div class="flex w-full h-full">
         <!-- Left side: Video preview -->
         <div class="w-2/3 h-full p-5 flex flex-col">
-            <h1 class="text-2xl font-bold mb-4">Reframer</h1>
+            <div class="flex items-center gap-4 mb-4">
+                <svg viewBox="0 0 115 47" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-6 w-auto">
+                    <path d="M0.272727 47V0.454544H13.9091C16.5152 0.454544 18.8182 1.00757 20.8182 2.11364C22.8333 3.21969 24.4091 4.76515 25.5455 6.75C26.697 8.73485 27.2727 11.0606 27.2727 13.7273C27.2727 16.3636 26.697 18.6742 25.5455 20.6591C24.4091 22.6288 22.8333 24.1667 20.8182 25.2727C18.8182 26.3636 16.5152 26.9091 13.9091 26.9091H1V25.4545H13.9091C16.2424 25.4545 18.303 24.9697 20.0909 24C21.8788 23.0303 23.2803 21.6667 24.2955 19.9091C25.3106 18.1515 25.8182 16.0909 25.8182 13.7273C25.8182 11.3485 25.3106 9.27273 24.2955 7.5C23.2803 5.72727 21.8788 4.35606 20.0909 3.38636C18.303 2.40151 16.2424 1.90909 13.9091 1.90909H1.72727V47H0.272727ZM18 25.8182L29.4545 47H27.8182L16.3636 25.8182H18ZM39.6477 47V0.454544H64.6477V1.90909H41.1023V23H62.4659V24.4545H41.1023V47H39.6477ZM92.5398 23V24.4545H75.1761V23H92.5398ZM114.148 0.454544V47H112.693V2H112.42L102.42 8.63636V6.90909L112.148 0.454544H114.148Z" fill="#3D394D"/>
+                </svg>
+                <h1 class="text-2xl font-bold m-0 text-gray-700">Reframer</h1>
+            </div>
             
             <!-- Video preview container -->
             <div id="videoPreview" class="flex-1 flex flex-col">
@@ -86,23 +91,82 @@
 
             <!-- File selection section -->
             <div class="p-5 border-b border-gray-200">
-                <div class="space-y-2.5">
-                    <div class="flex items-center gap-2.5">
-                        <input type="text" id="filePath" readonly placeholder="Select a video file..." class="flex-grow px-2 py-2 border border-gray-300 rounded bg-gray-50">
-                        <button id="selectFile" class="btn btn-primary">Browse</button>
+                <!-- Input type tabs -->
+                <div class="border-b border-gray-200 mb-4">
+                    <nav class="flex" aria-label="Input Type Tabs">
+                        <button class="input-type-tab-button flex-1 py-2 px-4 border-b-2 border-blue-500 font-medium text-sm text-blue-600 text-center" data-tab="single">
+                            Single Video
+                        </button>
+                        <button class="input-type-tab-button flex-1 py-2 px-4 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 text-center" data-tab="batch">
+                            Batch Processing
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Input type content -->
+                <div class="input-type-content">
+                    <!-- Single video input -->
+                    <div id="single-input-tab" class="input-type-pane">
+                        <div class="space-y-2.5">
+                            <div class="flex items-center gap-2.5">
+                                <input type="text" id="filePath" readonly placeholder="Select a video file..." class="flex-grow px-2 py-2 border border-gray-300 rounded bg-gray-50">
+                                <button id="selectFile" class="btn btn-primary">Browse</button>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <input type="text" id="outputDir" readonly placeholder="Select output directory..." class="flex-grow px-2 py-2 border border-gray-300 rounded bg-gray-50">
+                                <button id="selectOutputDir" class="btn btn-primary">Browse</button>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <label for="outputFilename" class="min-w-[150px] font-medium">Output Filename:</label>
+                                <input type="text" id="outputFilename" placeholder="Enter output filename (without extension)" class="input flex-grow">
+                                <span class="text-sm text-gray-600 italic">(Optional)</span>
+                            </div>
+                            <div class="flex gap-2.5">
+                                <button id="processButton" disabled class="btn btn-primary flex-grow disabled:bg-gray-300 disabled:cursor-not-allowed">Process Video</button>
+                                <button id="cancelButton" class="btn btn-secondary hidden">Cancel</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2.5">
-                        <input type="text" id="outputDir" readonly placeholder="Select output directory..." class="flex-grow px-2 py-2 border border-gray-300 rounded bg-gray-50">
-                        <button id="selectOutputDir" class="btn btn-primary">Browse</button>
-                    </div>
-                    <div class="flex items-center gap-2.5">
-                        <label for="outputFilename" class="min-w-[150px] font-medium">Output Filename:</label>
-                        <input type="text" id="outputFilename" placeholder="Enter output filename (without extension)" class="input flex-grow">
-                        <span class="text-sm text-gray-600 italic">(Optional)</span>
-                    </div>
-                    <div class="flex gap-2.5">
-                        <button id="processButton" disabled class="btn btn-primary flex-grow disabled:bg-gray-300 disabled:cursor-not-allowed">Process Video</button>
-                        <button id="cancelButton" class="btn btn-secondary hidden">Cancel</button>
+
+                    <!-- Batch processing input -->
+                    <div id="batch-input-tab" class="input-type-pane hidden">
+                        <!-- Batch progress header -->
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold">Batch Progress</h3>
+                                <div class="flex items-center gap-2">
+                                    <button id="startBatch" class="btn btn-primary" disabled>Start Batch</button>
+                                    <button id="pauseBatch" class="btn btn-secondary hidden">Pause</button>
+                                    <button id="clearBatch" class="btn btn-secondary">Clear Queue</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <div class="text-sm text-gray-600 mb-1">Overall Progress</div>
+                                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div id="batchProgressBar" class="h-full bg-blue-500 transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    <span id="batchProgressText">0/0 videos</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File selection controls -->
+                        <div class="flex gap-2.5 mb-4">
+                            <button id="selectBatchFiles" class="btn btn-primary flex-1">Select Multiple Files</button>
+                            <button id="selectBatchFolder" class="btn btn-primary flex-1">Select Folder</button>
+                            <div class="flex items-center gap-2 px-3 bg-gray-50 rounded border border-gray-200">
+                                <input type="checkbox" id="recursiveSearch" class="m-0">
+                                <label for="recursiveSearch" class="text-sm text-gray-600">Search subfolders</label>
+                            </div>
+                        </div>
+
+                        <!-- Queue list -->
+                        <div id="batchQueue" class="space-y-2 max-h-[200px] overflow-y-auto">
+                            <!-- Queue items will be added here dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -294,6 +358,10 @@
                                 <div class="flex items-center gap-2.5">
                                     <input type="checkbox" id="debug" class="m-0">
                                     <label for="debug" class="ml-1.5">Debug Mode</label>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <input type="checkbox" id="showHelp" class="m-0">
+                                    <label for="showHelp" class="ml-1.5">Show Help Messages</label>
                                 </div>
                             </div>
                         </div>
@@ -516,20 +584,277 @@
 
         // Update debug panel visibility when debug mode is toggled
         settings.debug.addEventListener('change', (e) => {
+            const debugPanel = document.querySelector('.debug-panel');
+            const debugOutput = document.getElementById('debugOutput');
+            const toggleDebugButton = document.getElementById('toggleDebug');
+            
             debugPanel.classList.toggle('hidden', !e.target.checked);
             if (e.target.checked) {
                 isDebugExpanded = true;
                 debugOutput.style.display = 'block';
                 toggleDebugButton.textContent = 'Collapse';
+                // Show debug panel immediately when enabled
+                debugPanel.classList.remove('hidden');
             }
         });
 
+        // Add clear debug button event listener
+        document.getElementById('clearDebug').addEventListener('click', () => {
+            clearDebugOutput();
+        });
+
+        // Global variable to track current Python handlers
+        let currentPythonHandlers = null;
+        let isProcessing = false;
+
+        // Function to clean up Python output handlers
+        function cleanupPythonHandlers() {
+            if (currentPythonHandlers) {
+                // Remove both output and complete handlers
+                window.electronAPI.removePythonOutputListener(currentPythonHandlers.pythonOutputHandler);
+                window.electronAPI.removePythonScriptCompleteListener(currentPythonHandlers.scriptCompleteHandler);
+                currentPythonHandlers = null;
+            }
+            isProcessing = false;
+        }
+
+        // Function to set up Python output handlers
+        function setupPythonHandlers() {
+            // Clean up any existing handlers first
+            cleanupPythonHandlers();
+            
+            // Only set up new handlers if we're not already processing
+            if (!isProcessing) {
+                isProcessing = true;
+                
+                const pythonOutputHandler = (event, message) => {
+                    if (isProcessing) {  // Only append output if we're still processing
+                        appendDebugOutput(message, 'info');
+                    }
+                };
+                
+                const scriptCompleteHandler = (event, result) => {
+                    // Clean up handlers immediately when script completes
+                    cleanupPythonHandlers();
+                    
+                    if (result.success) {
+                        showStatus(`Video processing completed successfully!\nOutput saved to: ${result.outputPath}`, 'success');
+                        appendDebugOutput('Processing completed successfully!', 'success');
+                        appendDebugOutput(`Output saved to: ${result.outputPath}`, 'success');
+                        
+                        // If in single video mode, load the output video
+                        if (!isBatchProcessing) {
+                            loadOutputVideo(result.outputPath).then(() => {
+                                switchVideoTab('output');
+                            });
+                        } else {
+                            // Update batch queue item status
+                            const video = batchQueue[currentBatchIndex];
+                            if (video) {
+                                video.status = 'completed';
+                                video.progress = 100;
+                                updateQueueItemStatus(video.path, 'completed', 100);
+                                updateBatchProgress();
+                            }
+                        }
+                    } else {
+                        showStatus(`Error: ${result.error}`, 'error');
+                        appendDebugOutput(`Error: ${result.error}`, 'error');
+                        if (result.stack) {
+                            appendDebugOutput(result.stack, 'error');
+                        }
+                        
+                        // If in batch mode, update queue item status
+                        if (isBatchProcessing) {
+                            const video = batchQueue[currentBatchIndex];
+                            if (video) {
+                                video.status = 'failed';
+                                updateQueueItemStatus(video.path, 'failed', 0, result.error);
+                                updateBatchProgress();
+                            }
+                        }
+                    }
+
+                    // Reset UI state if in single video mode
+                    if (!isBatchProcessing) {
+                        processButton.classList.remove('hidden');
+                        cancelButton.classList.add('hidden');
+                        processButton.disabled = false;
+                        selectFileButton.disabled = false;
+                        selectOutputDirButton.disabled = false;
+                        outputFilenameInput.disabled = false;
+                        currentProcess = null;
+                    } else {
+                        // Process next video in batch if not paused
+                        if (isBatchProcessing) {
+                            processNextVideo();
+                        }
+                    }
+                };
+
+                // Set up new handlers
+                window.electronAPI.onPythonOutput(pythonOutputHandler);
+                window.electronAPI.onPythonScriptComplete(scriptCompleteHandler);
+                
+                // Store current handlers
+                currentPythonHandlers = { pythonOutputHandler, scriptCompleteHandler };
+            }
+        }
+
+        // Add settings help text
+        const settingsHelp = {
+            targetRatio: "The desired aspect ratio for the output video. Common values: 0.75 (4:3), 0.5625 (16:9), 1.0 (1:1). The script will try to maintain this ratio while keeping important content in frame.",
+            maxWorkers: "Number of CPU cores to use for parallel processing. Higher values may improve speed but will use more system resources. Recommended: 4-8 for most systems.",
+            detector: "The object detection model to use. Currently only YOLO is supported, which is optimized for detecting people and common objects.",
+            skipFrames: "Process every Nth frame to speed up processing. Higher values are faster but may miss rapid movements. Recommended: 5-15 for most videos.",
+            confThreshold: "Minimum confidence score (0.0-1.0) required for object detection. Higher values are more selective but may miss objects. Lower values detect more objects but may include false positives.",
+            modelSize: "Size of the YOLO model to use. Larger models are more accurate but slower. Options: Nano (fastest), Small, Medium, Large, XLarge (most accurate).",
+            objectClasses: "Comma-separated list of object classes to detect. 0=person, 1=bicycle, etc. See YOLO documentation for full list. Default (0) detects people only.",
+            trackCount: "Maximum number of objects to track simultaneously. Higher values may improve tracking of multiple subjects but use more resources.",
+            paddingRatio: "Additional space to add around detected objects (0.0-1.0). Higher values give more context but may include unwanted areas.",
+            sizeWeight: "Importance of object size in crop decisions (0.0-1.0). Higher values prioritize keeping objects large in frame.",
+            centerWeight: "Importance of object position in crop decisions (0.0-1.0). Higher values try to keep objects centered.",
+            motionWeight: "Importance of object movement in crop decisions (0.0-1.0). Higher values prioritize tracking moving objects.",
+            historyWeight: "Importance of previous frame positions (0.0-1.0). Higher values make cropping more stable but less responsive to movement.",
+            saliencyWeight: "Importance of visual saliency in crop decisions (0.0-1.0). Higher values try to keep visually interesting areas in frame.",
+            faceDetection: "Enable additional face detection to prioritize keeping faces in frame. Useful for videos with people. However, it can cause issues with tracking correctly.",
+            weightedCenter: "Use weighted center calculation based on object size and position. Helps balance the frame when there are multiple subjects.",
+            blendSaliency: "Blend saliency map with object detection for better composition. May help keep visually important areas in frame.",
+            applySmoothing: "Apply temporal smoothing to crop window movement. Reduces jitter but may make tracking less responsive.",
+            smoothingWindow: "Number of frames to use for smoothing (1-100). Higher values make movement smoother but may lag behind rapid changes.",
+            positionInertia: "How much the crop position sticks to previous frames (0.0-1.0). Higher values reduce jitter but may lag behind movement.",
+            sizeInertia: "How much the crop size sticks to previous frames (0.0-1.0). Higher values make size changes smoother but may lag behind.",
+            debug: "Enable detailed debug output showing processing steps and decisions."
+        };
+
+        // Add help text to settings
+        function addHelpTextToSettings() {
+            // Get all setting elements
+            const settingElements = {
+                targetRatio: document.getElementById('targetRatio'),
+                maxWorkers: document.getElementById('maxWorkers'),
+                detector: document.getElementById('detector'),
+                skipFrames: document.getElementById('skipFrames'),
+                confThreshold: document.getElementById('confThreshold'),
+                modelSize: document.getElementById('modelSize'),
+                objectClasses: document.getElementById('objectClasses'),
+                trackCount: document.getElementById('trackCount'),
+                paddingRatio: document.getElementById('paddingRatio'),
+                sizeWeight: document.getElementById('sizeWeight'),
+                centerWeight: document.getElementById('centerWeight'),
+                motionWeight: document.getElementById('motionWeight'),
+                historyWeight: document.getElementById('historyWeight'),
+                saliencyWeight: document.getElementById('saliencyWeight'),
+                faceDetection: document.getElementById('faceDetection'),
+                weightedCenter: document.getElementById('weightedCenter'),
+                blendSaliency: document.getElementById('blendSaliency'),
+                applySmoothing: document.getElementById('applySmoothing'),
+                smoothingWindow: document.getElementById('smoothingWindow'),
+                positionInertia: document.getElementById('positionInertia'),
+                sizeInertia: document.getElementById('sizeInertia')
+            };
+
+            // Add help text elements and toggle visibility
+            Object.entries(settingElements).forEach(([key, element]) => {
+                if (!element) return;
+
+                // Find the parent container (usually a div with flex items-center gap-2.5)
+                const container = element.closest('.flex.items-center.gap-2\\.5');
+                if (!container) return;
+
+                // Create help text element
+                const helpText = document.createElement('div');
+                helpText.className = 'help-text text-sm text-gray-600 mt-1 ml-[150px] hidden';
+                helpText.textContent = settingsHelp[key];
+                helpText.id = `${key}-help`;
+
+                // Insert help text after the container
+                container.parentNode.insertBefore(helpText, container.nextSibling);
+            });
+        }
+
+        // Function to toggle help text visibility
+        function toggleHelpText(show) {
+            const helpTexts = document.querySelectorAll('.help-text');
+            helpTexts.forEach(help => {
+                help.classList.toggle('hidden', !show);
+            });
+        }
+
+        // Add help text toggle handler
+        document.getElementById('showHelp').addEventListener('change', (e) => {
+            toggleHelpText(e.target.checked);
+        });
+
+        // Initialize help text system
+        addHelpTextToSettings();
+
+        // Update logSettingsToDebug to include help text when enabled
+        function logSettingsToDebug(options) {
+            appendDebugOutput('Processing Settings:', 'info');
+            appendDebugOutput('-------------------', 'info');
+            
+            // Log all settings in a readable format
+            const settings = [
+                ['Input Video', options.input_path],
+                ['Output Directory', options.output_dir],
+                ['Output Filename', options.output_filename || '(auto-generated)'],
+                ['Target Aspect Ratio', options.target_ratio],
+                ['Max Workers', options.max_workers],
+                ['Detector Model', options.detector],
+                ['Skip Frames', options.skip_frames],
+                ['Confidence Threshold', options.conf_threshold],
+                ['Model Size', options.model_size],
+                ['Object Classes', options.object_classes.join(', ')],
+                ['Track Count', options.track_count],
+                ['Padding Ratio', options.padding_ratio],
+                ['Size Weight', options.size_weight],
+                ['Center Weight', options.center_weight],
+                ['Motion Weight', options.motion_weight],
+                ['History Weight', options.history_weight],
+                ['Saliency Weight', options.saliency_weight],
+                ['Face Detection', options.face_detection ? 'Enabled' : 'Disabled'],
+                ['Weighted Center', options.weighted_center ? 'Enabled' : 'Disabled'],
+                ['Blend Saliency', options.blend_saliency ? 'Enabled' : 'Disabled'],
+                ['Apply Smoothing', options.apply_smoothing ? 'Enabled' : 'Disabled'],
+                ['Smoothing Window', options.smoothing_window],
+                ['Position Inertia', options.position_inertia],
+                ['Size Inertia', options.size_inertia],
+                ['Debug Mode', options.debug ? 'Enabled' : 'Disabled']
+            ];
+
+            // Find the longest label for alignment
+            const maxLabelLength = Math.max(...settings.map(([label]) => label.length));
+            
+            // Log each setting with aligned labels and help text if enabled
+            settings.forEach(([label, value]) => {
+                const paddedLabel = label.padEnd(maxLabelLength);
+                appendDebugOutput(`${paddedLabel}: ${value}`, 'info');
+                
+                // Add help text if showHelp is enabled
+                if (document.getElementById('showHelp').checked) {
+                    const settingKey = label.toLowerCase().replace(/\s+/g, '');
+                    if (settingsHelp[settingKey]) {
+                        appendDebugOutput(`    ${settingsHelp[settingKey]}`, 'info');
+                    }
+                }
+            });
+            
+            appendDebugOutput('-------------------', 'info');
+            appendDebugOutput('Starting processing...', 'info');
+            appendDebugOutput('', 'info'); // Add a blank line for readability
+        }
+
+        // Update process button click handler
         processButton.addEventListener('click', async () => {
             const videoPath = filePathInput.value;
             const outputDir = outputDirInput.value;
             const outputFilename = outputFilenameInput.value.trim();
             
             if (!videoPath || !outputDir) return;
+
+            // Clean up any existing handlers before starting new process
+            cleanupPythonHandlers();
 
             // Show cancel button and hide process button
             processButton.classList.add('hidden');
@@ -546,54 +871,24 @@
             appendDebugOutput('Starting video processing...', 'info');
 
             try {
+                // Set up handlers before starting process
+                setupPythonHandlers();
+
                 // Convert object classes string to array of numbers
                 const objectClassesArray = settings.objectClasses.value.split(',').map(x => parseInt(x.trim()));
 
                 // Show debug panel if debug mode is enabled
                 if (settings.debug.checked) {
+                    const debugPanel = document.querySelector('.debug-panel');
                     debugPanel.classList.remove('hidden');
+                    isDebugExpanded = true;
+                    document.getElementById('debugOutput').style.display = 'block';
+                    document.getElementById('toggleDebug').textContent = 'Collapse';
                 }
 
-                // Set up listener for Python output
-                const pythonOutputHandler = (event, message) => {
-                    appendDebugOutput(message, 'info');
-                };
-                window.electronAPI.onPythonOutput(pythonOutputHandler);
-
-                // Set up listener for script completion
-                const scriptCompleteHandler = (event, result) => {
-                    // Remove both listeners
-                    window.electronAPI.removePythonOutputListener(pythonOutputHandler);
-                    window.electronAPI.removePythonScriptCompleteListener(scriptCompleteHandler);
-
-                    if (result.success) {
-                        showStatus(`Video processing completed successfully!\nOutput saved to: ${result.outputPath}`, 'success');
-                        appendDebugOutput('Processing completed successfully!', 'success');
-                        appendDebugOutput(`Output saved to: ${result.outputPath}`, 'success');
-                        // Load the output video and switch to its tab
-                        loadOutputVideo(result.outputPath).then(() => {
-                            switchVideoTab('output');
-                        });
-                    } else {
-                        showStatus(`Error: ${result.error}`, 'error');
-                        appendDebugOutput(`Error: ${result.error}`, 'error');
-                        if (result.stack) {
-                            appendDebugOutput(result.stack, 'error');
-                        }
-                    }
-
-                    // Reset UI state
-                    processButton.classList.remove('hidden');
-                    cancelButton.classList.add('hidden');
-                    processButton.disabled = false;
-                    selectFileButton.disabled = false;
-                    selectOutputDirButton.disabled = false;
-                    outputFilenameInput.disabled = false;
-                    currentProcess = null;
-                };
-                window.electronAPI.onPythonScriptComplete(scriptCompleteHandler);
-
-                currentProcess = await window.electronAPI.runPythonScript(videoPath, {
+                // Prepare options object
+                const options = {
+                    input_path: videoPath,
                     output_dir: outputDir,
                     output_filename: outputFilename,
                     target_ratio: parseFloat(settings.targetRatio.value),
@@ -618,8 +913,17 @@
                     position_inertia: parseFloat(settings.positionInertia.value),
                     size_inertia: parseFloat(settings.sizeInertia.value),
                     debug: settings.debug.checked
-                });
+                };
+
+                // Log settings to debug window
+                logSettingsToDebug(options);
+
+                // Run the Python script
+                currentProcess = await window.electronAPI.runPythonScript(videoPath, options);
             } catch (error) {
+                // Clean up handlers on error
+                cleanupPythonHandlers();
+
                 if (error.code === 'PROCESS_CANCELLED') {
                     showStatus('Processing cancelled', 'error');
                     appendDebugOutput('Processing cancelled by user', 'error');
@@ -645,9 +949,13 @@
             }
         });
 
+        // Update cancel button handler
         cancelButton.addEventListener('click', async () => {
             appendDebugOutput('Cancelling processing...', 'info');
             try {
+                // Clean up Python output handlers
+                cleanupPythonHandlers();
+
                 const result = await window.electronAPI.cancelProcessing();
                 if (result.success) {
                     showStatus('Processing cancelled', 'error');
@@ -836,6 +1144,14 @@
 
         // Function to append text to debug output
         function appendDebugOutput(text, type = 'info') {
+            const debugPanel = document.querySelector('.debug-panel');
+            const debugOutput = document.getElementById('debugOutput');
+            
+            // Show debug panel if it's hidden but debug mode is enabled
+            if (settings.debug.checked && debugPanel.classList.contains('hidden')) {
+                debugPanel.classList.remove('hidden');
+            }
+            
             const line = document.createElement('div');
             line.className = type;
             line.textContent = text;
@@ -845,8 +1161,282 @@
 
         // Function to clear debug output
         function clearDebugOutput() {
+            const debugOutput = document.getElementById('debugOutput');
             debugOutput.innerHTML = '';
         }
+
+        // Batch Processing Functionality
+        const batchQueue = [];
+        let isBatchProcessing = false;
+        let currentBatchIndex = -1;
+
+        // Batch processing UI elements
+        const startBatchButton = document.getElementById('startBatch');
+        const pauseBatchButton = document.getElementById('pauseBatch');
+        const clearBatchButton = document.getElementById('clearBatch');
+        const selectBatchFilesButton = document.getElementById('selectBatchFiles');
+        const selectBatchFolderButton = document.getElementById('selectBatchFolder');
+        const recursiveSearchCheckbox = document.getElementById('recursiveSearch');
+        const batchQueueContainer = document.getElementById('batchQueue');
+        const batchProgressBar = document.getElementById('batchProgressBar');
+        const batchProgressText = document.getElementById('batchProgressText');
+
+        // Function to create a queue item element
+        function createQueueItemElement(videoPath, status = 'pending') {
+            const item = document.createElement('div');
+            item.className = 'bg-white rounded-lg shadow-sm p-4';
+            item.dataset.path = videoPath;
+            
+            const fileName = videoPath.split('/').pop();
+            const statusColors = {
+                pending: 'text-gray-500',
+                processing: 'text-blue-500',
+                completed: 'text-green-500',
+                failed: 'text-red-500'
+            };
+            
+            item.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-gray-900 truncate">${fileName}</div>
+                        <div class="text-xs text-gray-500 truncate">${videoPath}</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm ${statusColors[status]}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-600 error-message hidden"></div>
+            `;
+            
+            return item;
+        }
+
+        // Function to update queue item status
+        function updateQueueItemStatus(videoPath, status, progress = 0, error = null) {
+            const item = batchQueueContainer.querySelector(`[data-path="${videoPath}"]`);
+            if (!item) return;
+
+            const statusSpan = item.querySelector('span');
+            const errorMessage = item.querySelector('.error-message');
+
+            // Update status
+            const statusColors = {
+                pending: 'text-gray-500',
+                processing: 'text-blue-500',
+                completed: 'text-green-500',
+                failed: 'text-red-500'
+            };
+            statusSpan.className = `text-sm ${statusColors[status]}`;
+            statusSpan.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+
+            // Update error message if any
+            if (error) {
+                errorMessage.textContent = error;
+                errorMessage.classList.remove('hidden');
+            } else {
+                errorMessage.classList.add('hidden');
+            }
+        }
+
+        // Function to update batch progress
+        function updateBatchProgress() {
+            const total = batchQueue.length;
+            const completed = batchQueue.filter(item => item.status === 'completed').length;
+            const progress = total > 0 ? (completed / total) * 100 : 0;
+            
+            batchProgressBar.style.width = `${progress}%`;
+            batchProgressText.textContent = `${completed}/${total} videos`;
+        }
+
+        // Function to add videos to queue
+        function addVideosToQueue(videoPaths) {
+            for (const path of videoPaths) {
+                if (!batchQueue.some(item => item.path === path)) {
+                    batchQueue.push({
+                        path,
+                        status: 'pending',
+                        progress: 0
+                    });
+                    batchQueueContainer.appendChild(createQueueItemElement(path));
+                }
+            }
+            updateBatchProgress();
+            startBatchButton.disabled = batchQueue.length === 0;
+        }
+
+        // Function to process next video in queue
+        async function processNextVideo() {
+            if (currentBatchIndex >= batchQueue.length - 1) {
+                // All videos processed
+                isBatchProcessing = false;
+                startBatchButton.classList.remove('hidden');
+                pauseBatchButton.classList.add('hidden');
+                showStatus('Batch processing completed!', 'success');
+                return;
+            }
+
+            currentBatchIndex++;
+            const video = batchQueue[currentBatchIndex];
+            updateQueueItemStatus(video.path, 'processing');
+
+            try {
+                // Clean up any existing handlers before starting new process
+                cleanupPythonHandlers();
+
+                // Set up handlers before starting process
+                setupPythonHandlers();
+
+                // Get current settings
+                const objectClassesArray = settings.objectClasses.value.split(',').map(x => parseInt(x.trim()));
+                
+                // Prepare options object
+                const options = {
+                    input_path: video.path,
+                    output_dir: video.path.substring(0, video.path.lastIndexOf('/')),
+                    output_filename: null, // Use default naming
+                    target_ratio: parseFloat(settings.targetRatio.value),
+                    max_workers: parseInt(settings.maxWorkers.value),
+                    detector: settings.detector.value,
+                    skip_frames: parseInt(settings.skipFrames.value),
+                    conf_threshold: parseFloat(settings.confThreshold.value),
+                    model_size: settings.modelSize.value,
+                    object_classes: objectClassesArray,
+                    track_count: parseInt(settings.trackCount.value),
+                    padding_ratio: parseFloat(settings.paddingRatio.value),
+                    size_weight: parseFloat(settings.sizeWeight.value),
+                    center_weight: parseFloat(settings.centerWeight.value),
+                    motion_weight: parseFloat(settings.motionWeight.value),
+                    history_weight: parseFloat(settings.historyWeight.value),
+                    saliency_weight: parseFloat(settings.saliencyWeight.value),
+                    face_detection: settings.faceDetection.checked,
+                    weighted_center: settings.weightedCenter.checked,
+                    blend_saliency: settings.blendSaliency.checked,
+                    apply_smoothing: settings.applySmoothing.checked,
+                    smoothing_window: parseInt(settings.smoothingWindow.value),
+                    position_inertia: parseFloat(settings.positionInertia.value),
+                    size_inertia: parseFloat(settings.sizeInertia.value),
+                    debug: settings.debug.checked
+                };
+
+                // Log settings to debug window
+                logSettingsToDebug(options);
+
+                // Process video with current settings
+                await window.electronAPI.runPythonScript(video.path, options);
+            } catch (error) {
+                // Clean up handlers on error
+                cleanupPythonHandlers();
+
+                video.status = 'failed';
+                updateQueueItemStatus(video.path, 'failed', 0, error.message);
+                updateBatchProgress();
+                
+                // Process next video if not paused
+                if (isBatchProcessing) {
+                    processNextVideo();
+                }
+            }
+        }
+
+        // Event Listeners for batch processing
+        selectBatchFilesButton.addEventListener('click', async () => {
+            const filePaths = await window.electronAPI.selectMultipleFiles();
+            if (filePaths && filePaths.length > 0) {
+                addVideosToQueue(filePaths);
+            }
+        });
+
+        selectBatchFolderButton.addEventListener('click', async () => {
+            const dirPath = await window.electronAPI.selectDirectory();
+            if (dirPath) {
+                const recursive = recursiveSearchCheckbox.checked;
+                const videoPaths = await window.electronAPI.getVideoFilesInDirectory(dirPath, recursive);
+                if (videoPaths && videoPaths.length > 0) {
+                    addVideosToQueue(videoPaths);
+                }
+            }
+        });
+
+        startBatchButton.addEventListener('click', () => {
+            if (batchQueue.length === 0) return;
+            
+            // Show debug panel if debug mode is enabled
+            if (settings.debug.checked) {
+                const debugPanel = document.querySelector('.debug-panel');
+                debugPanel.classList.remove('hidden');
+                isDebugExpanded = true;
+                document.getElementById('debugOutput').style.display = 'block';
+                document.getElementById('toggleDebug').textContent = 'Collapse';
+            }
+            
+            isBatchProcessing = true;
+            currentBatchIndex = -1;
+            startBatchButton.classList.add('hidden');
+            pauseBatchButton.classList.remove('hidden');
+            processNextVideo();
+        });
+
+        pauseBatchButton.addEventListener('click', () => {
+            isBatchProcessing = false;
+            startBatchButton.classList.remove('hidden');
+            pauseBatchButton.classList.add('hidden');
+            showStatus('Batch processing paused', 'info');
+        });
+
+        clearBatchButton.addEventListener('click', () => {
+            if (isBatchProcessing) {
+                isBatchProcessing = false;
+                startBatchButton.classList.remove('hidden');
+                pauseBatchButton.classList.add('hidden');
+            }
+            batchQueue.length = 0;
+            currentBatchIndex = -1;
+            batchQueueContainer.innerHTML = '';
+            batchProgressBar.style.width = '0%';
+            batchProgressText.textContent = '0/0 videos';
+            startBatchButton.disabled = true;
+        });
+
+        // Add input type tab functionality
+        const inputTypeTabButtons = document.querySelectorAll('.input-type-tab-button');
+        const inputTypePanes = document.querySelectorAll('.input-type-pane');
+
+        function switchInputTypeTab(tabId) {
+            // Update tab buttons
+            inputTypeTabButtons.forEach(button => {
+                if (button.dataset.tab === tabId) {
+                    button.classList.add('border-blue-500', 'text-blue-600');
+                    button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                } else {
+                    button.classList.remove('border-blue-500', 'text-blue-600');
+                    button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                }
+            });
+
+            // Update tab panes
+            inputTypePanes.forEach(pane => {
+                if (pane.id === `${tabId}-input-tab`) {
+                    pane.classList.remove('hidden');
+                } else {
+                    pane.classList.add('hidden');
+                }
+            });
+
+            // Reset video preview when switching input types
+            if (tabId === 'single') {
+                switchVideoTab('input');
+            }
+        }
+
+        // Add click handlers for input type tabs
+        inputTypeTabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                switchInputTypeTab(button.dataset.tab);
+            });
+        });
+
+        // Initialize with single video input tab
+        switchInputTypeTab('single');
     </script>
 </body>
 </html>
