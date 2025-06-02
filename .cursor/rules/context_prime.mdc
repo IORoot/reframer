@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Context Prime
+globs: 
+alwaysApply: true
+---
+
+- Read the README.md for context
+- Do a git ls-files and use the .py .html .js .json .css .md files for context 
