@@ -72,6 +72,10 @@ def parse_args():
 def process_keyframe(frame_idx, frame, detector, tracker, tracked_objects_by_frame, track_count=1):
     """Process a keyframe with detection and tracking."""
     # print(f"🐤 main : process_keyframe: {frame_idx}")
+    
+    # Debug: Show frame dimensions to verify we're using the right video
+    if frame_idx % 100 == 0:  # Only print every 100th frame to avoid spam
+        print(f"🔍 Processing frame {frame_idx}: {frame.shape[1]}x{frame.shape[0]}")
 
     # Detect objects in frame
     detected_objects = detector.detect(
@@ -183,6 +187,14 @@ def main(args=None):
 
     # First pass: detect and track objects on keyframes only
     print("Phase 1: Detecting and tracking objects...")
+    
+    # Debug: Show which video we're using
+    if using_proxy:
+        print(f"🔍 Using proxy video for detection: {video_processor.video_info['path']}")
+        print(f"📊 Current video dimensions: {video_processor.video_info['width']}x{video_processor.video_info['height']}")
+    else:
+        print(f"🔍 Using original video for detection: {video_processor.video_info['path']}")
+        print(f"📊 Current video dimensions: {video_processor.video_info['width']}x{video_processor.video_info['height']}")
     
     # Determine keyframes
     keyframes = list(range(0, total_frames, args.skip_frames))

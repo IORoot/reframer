@@ -288,7 +288,7 @@ function arguments()
             shift
             ;;
         --debug)
-            DEBUG=true
+            DEBUG=false
             shift
             ;;
         --use_proxy)

@@ -141,6 +141,10 @@ class VideoProcessor:
         # Open proxy video
         self.cap = cv2.VideoCapture(self.proxy_info['path'])
         
+        # Verify the video was opened successfully
+        if not self.cap.isOpened():
+            raise ValueError(f"Failed to open proxy video: {self.proxy_info['path']}")
+        
         # Update video info to proxy dimensions
         self.video_info = {
             'width': int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
@@ -152,6 +156,7 @@ class VideoProcessor:
         
         print(f"🔄 Switched to proxy video: {self.proxy_info['path']}")
         print(f"📊 Proxy dimensions: {self.video_info['width']}x{self.video_info['height']}")
+        print(f"📊 Proxy frames: {self.video_info['total_frames']}")
         
         return self.video_info
     
@@ -167,11 +172,16 @@ class VideoProcessor:
         # Open original video
         self.cap = cv2.VideoCapture(self.original_video_info['path'])
         
+        # Verify the video was opened successfully
+        if not self.cap.isOpened():
+            raise ValueError(f"Failed to open original video: {self.original_video_info['path']}")
+        
         # Restore original video info
         self.video_info = self.original_video_info.copy()
         
         print(f"🔄 Switched back to original video: {self.video_info['path']}")
         print(f"📊 Original dimensions: {self.video_info['width']}x{self.video_info['height']}")
+        print(f"📊 Original frames: {self.video_info['total_frames']}")
         
         return self.video_info
     
