@@ -26,6 +26,12 @@ def parse_args():
     parser.add_argument('--target_ratio', type=float, default=9/16, help='Target aspect ratio (width/height)')
     parser.add_argument('--max_workers', type=int, default=4, help='Maximum number of worker threads for parallel processing')
 
+    # Proxy args
+    parser.add_argument('--use_proxy', action='store_true', default=False, help='Use proxy video for faster detection and tracking')
+    parser.add_argument('--proxy_resolution', type=str, default='720p', choices=['360p', '480p', '720p', '1080p', '25%', '50%'], help='Proxy video resolution (Default: 720p)')
+    parser.add_argument('--proxy_quality', type=str, default='medium', choices=['low', 'medium', 'high'], help='Proxy video quality (Default: medium)')
+    parser.add_argument('--keep_proxy', action='store_true', default=False, help='Keep proxy file after processing (Default: auto-remove)')
+
     # Detector args
     parser.add_argument('--detector', type=str, default='yolo', choices=['yolo', 'ssd', 'faster_rcnn'], help='Object detection model to use')
     parser.add_argument('--skip_frames', type=int, default=10, help='Process every nth frame for detection (1 = process all frames)')
@@ -88,9 +94,11 @@ def main(args=None):
     if args is None:
         args = parse_args()
     
+    # Start timing
+    script_start_time = time.time()
+    
     # Initialize components with YOLOv8
     video_processor = VideoProcessor()
-
 
     detector = ObjectDetector(
         confidence_threshold=args.conf_threshold,   # 🕵️‍♂️ Confidence threshold for object detection (0-1).
@@ -126,7 +134,7 @@ def main(args=None):
         size_inertia=args.size_inertia          # 📏 How much the size of the crop should "stick" to the previous frame (0-1).
     )
     
-    # Load video and get properties
+    # Load original video and get properties
     video_info = video_processor.load_video(args.input)
     total_frames = video_info['total_frames']
     fps = video_info['fps']
@@ -135,6 +143,32 @@ def main(args=None):
     
     print(f"Processing video: {args.input}")
     print(f"Total frames: {total_frames}, FPS: {fps}, Resolution: {width}x{height}")
+    
+    # Proxy video handling
+    using_proxy = False
+    if args.use_proxy:
+        print(f"\n🎬 Creating proxy video for faster processing...")
+        proxy_info = video_processor.create_proxy_video(
+            proxy_resolution=args.proxy_resolution,
+            proxy_quality=args.proxy_quality
+        )
+        
+        if proxy_info:
+            using_proxy = True
+            print(f"✅ Using proxy video: {proxy_info['path']}")
+            print(f"📊 Proxy resolution: {proxy_info['width']}x{proxy_info['height']}")
+            print(f"⚡ Speed improvement: ~{(width * height) / (proxy_info['width'] * proxy_info['height']):.1f}x faster detection")
+            
+            # Switch to proxy video for detection and tracking
+            print(f"\n🔄 Switching to proxy video for detection and tracking...")
+            proxy_video_info = video_processor.switch_to_proxy_video()
+            total_frames = proxy_video_info['total_frames']
+            fps = proxy_video_info['fps']
+            width = proxy_video_info['width']
+            height = proxy_video_info['height']
+        else:
+            print("⚠️ Warning: Could not create proxy video. Falling back to processing original video.")
+            using_proxy = False
     
     # Process frames
     tracked_objects_by_frame = {}
@@ -203,6 +237,16 @@ def main(args=None):
     # Second pass: calculate crop windows for keyframes
     print("Phase 2: Calculating crop windows for keyframes...")
     
+    # Switch back to original video for crop calculation if using proxy
+    if using_proxy:
+        print(f"\n🔄 Switching back to original video for crop calculation...")
+        original_video_info = video_processor.switch_to_original_video()
+        original_width = original_video_info['width']
+        original_height = original_video_info['height']
+    else:
+        original_width = width
+        original_height = height
+    
     # Pre-allocate crop windows array
     crop_windows = [None] * total_frames
     
@@ -213,6 +257,28 @@ def main(args=None):
             
         objects = tracked_objects_by_frame[frame_idx]
         
+        # Convert tracker dictionary to list of objects
+        if isinstance(objects, dict):
+            objects = list(objects.values())
+        
+        # Scale object coordinates if using proxy
+        if using_proxy:
+            print(f"DEBUG: objects for frame {frame_idx}: {objects}")
+            scaled_objects = []
+            for obj in objects:
+                if not isinstance(obj, dict) or 'box' not in obj or not isinstance(obj['box'], (list, tuple)):
+                    print(f"WARNING: Skipping malformed object: {obj}")
+                    continue
+                # Scale bounding box coordinates from proxy to original
+                scaled_x = int(obj['box'][0] * video_processor.scale_factor_x)
+                scaled_y = int(obj['box'][1] * video_processor.scale_factor_y)
+                scaled_w = int(obj['box'][2] * video_processor.scale_factor_x)
+                scaled_h = int(obj['box'][3] * video_processor.scale_factor_y)
+                scaled_obj = obj.copy()
+                scaled_obj['box'] = [scaled_x, scaled_y, scaled_w, scaled_h]
+                scaled_objects.append(scaled_obj)
+            objects = scaled_objects
+        
         # Get the actual frame for additional analysis
         video_processor.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
         ret, frame = video_processor.cap.read()
@@ -221,7 +287,7 @@ def main(args=None):
             continue
         
         # Calculate optimal crop window
-        crop_window = crop_calculator.calculate(objects, width, height, frame)
+        crop_window = crop_calculator.calculate(objects, original_width, original_height, frame)
         crop_windows[frame_idx] = crop_window
         
         if frame_idx % 100 == 0:
@@ -288,6 +354,13 @@ def main(args=None):
             y = int((height - crop_height) / 2)
             crop_windows[i] = [x, y, crop_width, crop_height]
     
+    # Scale all crop windows if using proxy (including interpolated ones)
+    # REMOVED: This was causing double scaling. Object coordinates are now scaled instead.
+    # if using_proxy:
+    #     print("🔄 Scaling crop coordinates from proxy to original video dimensions...")
+    #     for i in range(total_frames):
+    #         if crop_windows[i] is not None:
+    #             crop_windows[i] = video_processor.scale_coordinates_to_original(crop_windows[i])
 
 
 
@@ -325,9 +398,21 @@ def main(args=None):
         fps=fps
     )
     
-    elapsed_time = time.time() - start_time
-    print(f"Video processing completed in {elapsed_time:.2f} seconds")
+    # Cleanup proxy if not keeping it
+    if using_proxy and not args.keep_proxy:
+        video_processor.cleanup_proxy()
+    
+    # Calculate total processing time
+    total_processing_time = time.time() - script_start_time
+    processing_time_ms = int(total_processing_time * 1000)
+    
+    print(f"Video processing completed in {total_processing_time:.2f} seconds ({processing_time_ms} ms)")
     print(f"Output saved to: {args.output}")
+    
+    if using_proxy:
+        print(f"✅ Processing completed using proxy video for faster detection")
+    else:
+        print(f"✅ Processing completed using original video")
 
 
 
@@ -338,4 +423,4 @@ if __name__ in {"__main__", "__mp_main__"}:
     if len(sys.argv) > 1:
         main()
     else:
-        start_gui()
+        main()

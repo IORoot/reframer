@@ -10,6 +10,9 @@ class VideoProcessor:
         self.frames = None
         self.current_frame_idx = 0
         self.video_info = {}
+        self.proxy_info = {}
+        self.scale_factor_x = 1.0
+        self.scale_factor_y = 1.0
     
     def load_video(self, video_path):
         """Load video file and extract basic information."""
@@ -28,6 +31,173 @@ class VideoProcessor:
         
         self.current_frame_idx = 0
         return self.video_info
+    
+    def create_proxy_video(self, proxy_resolution='720p', proxy_quality='medium'):
+        """Create a proxy video for faster processing."""
+        if self.cap is None:
+            raise ValueError("No video loaded. Call load_video() first.")
+        
+        # Calculate proxy dimensions
+        original_width = self.video_info['width']
+        original_height = self.video_info['height']
+        
+        if proxy_resolution == '360p':
+            target_width, target_height = 640, 360
+        elif proxy_resolution == '480p':
+            target_width, target_height = 854, 480
+        elif proxy_resolution == '720p':
+            target_width, target_height = 1280, 720
+        elif proxy_resolution == '1080p':
+            target_width, target_height = 1920, 1080
+        elif proxy_resolution == '25%':
+            target_width = int(original_width * 0.25)
+            target_height = int(original_height * 0.25)
+        elif proxy_resolution == '50%':
+            target_width = int(original_width * 0.5)
+            target_height = int(original_height * 0.5)
+        else:
+            raise ValueError(f"Unknown proxy resolution: {proxy_resolution}")
+        
+        # Maintain aspect ratio
+        original_ratio = original_width / original_height
+        target_ratio = target_width / target_height
+        
+        if original_ratio > target_ratio:
+            # Original is wider, fit to width
+            proxy_width = target_width
+            proxy_height = int(target_width / original_ratio)
+        else:
+            # Original is taller, fit to height
+            proxy_height = target_height
+            proxy_width = int(target_height * original_ratio)
+        
+        # Ensure even dimensions for video encoding
+        proxy_width = proxy_width - (proxy_width % 2)
+        proxy_height = proxy_height - (proxy_height % 2)
+        
+        # Calculate scale factors for coordinate conversion
+        self.scale_factor_x = original_width / proxy_width
+        self.scale_factor_y = original_height / proxy_height
+        
+        # Set quality parameters
+        if proxy_quality == 'low':
+            crf = 35
+            preset = 'ultrafast'
+        elif proxy_quality == 'medium':
+            crf = 28
+            preset = 'fast'
+        elif proxy_quality == 'high':
+            crf = 23
+            preset = 'medium'
+        else:
+            raise ValueError(f"Unknown proxy quality: {proxy_quality}")
+        
+        # Create proxy file path
+        input_path = self.video_info['path']
+        proxy_path = input_path.rsplit('.', 1)[0] + '_proxy.mp4'
+        
+        # Create proxy using ffmpeg
+        ffmpeg_command = [
+            'ffmpeg', '-y', '-i', input_path,
+            '-vf', f'scale={proxy_width}:{proxy_height}',
+            '-c:v', 'libx264', '-preset', preset, '-crf', str(crf),
+            '-an',  # No audio for proxy
+            proxy_path
+        ]
+        
+        print(f"Creating proxy video: {proxy_path}")
+        print(f"Proxy resolution: {proxy_width}x{proxy_height} (scale factors: {self.scale_factor_x:.2f}x, {self.scale_factor_y:.2f}x)")
+        
+        try:
+            result = subprocess.run(ffmpeg_command, capture_output=True, text=True, check=True)
+            print("✅ Proxy video created successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to create proxy video: {e.stderr}")
+            return None
+        
+        # Store proxy information
+        self.proxy_info = {
+            'path': proxy_path,
+            'width': proxy_width,
+            'height': proxy_height,
+            'scale_factor_x': self.scale_factor_x,
+            'scale_factor_y': self.scale_factor_y
+        }
+        
+        return self.proxy_info
+    
+    def switch_to_proxy_video(self):
+        """Switch video capture to use the proxy video for detection and tracking."""
+        if not self.proxy_info or not os.path.exists(self.proxy_info['path']):
+            raise ValueError("No proxy video available. Call create_proxy_video() first.")
+        
+        # Store original video info
+        self.original_video_info = self.video_info.copy()
+        
+        # Close current video capture
+        if self.cap:
+            self.cap.release()
+        
+        # Open proxy video
+        self.cap = cv2.VideoCapture(self.proxy_info['path'])
+        
+        # Update video info to proxy dimensions
+        self.video_info = {
+            'width': int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            'height': int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+            'fps': self.cap.get(cv2.CAP_PROP_FPS),
+            'total_frames': int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)),
+            'path': self.proxy_info['path']
+        }
+        
+        print(f"🔄 Switched to proxy video: {self.proxy_info['path']}")
+        print(f"📊 Proxy dimensions: {self.video_info['width']}x{self.video_info['height']}")
+        
+        return self.video_info
+    
+    def switch_to_original_video(self):
+        """Switch video capture back to the original video for final processing."""
+        if not hasattr(self, 'original_video_info'):
+            raise ValueError("No original video info available.")
+        
+        # Close current video capture
+        if self.cap:
+            self.cap.release()
+        
+        # Open original video
+        self.cap = cv2.VideoCapture(self.original_video_info['path'])
+        
+        # Restore original video info
+        self.video_info = self.original_video_info.copy()
+        
+        print(f"🔄 Switched back to original video: {self.video_info['path']}")
+        print(f"📊 Original dimensions: {self.video_info['width']}x{self.video_info['height']}")
+        
+        return self.video_info
+    
+    def scale_coordinates_to_original(self, crop_window):
+        """Scale crop coordinates from proxy back to original video dimensions."""
+        if not self.proxy_info:
+            return crop_window  # No scaling if no proxy was used
+        
+        x, y, w, h = crop_window
+        
+        # Scale coordinates and dimensions
+        scaled_x = int(x * self.scale_factor_x)
+        scaled_y = int(y * self.scale_factor_y)
+        scaled_w = int(w * self.scale_factor_x)
+        scaled_h = int(h * self.scale_factor_y)
+        
+        return [scaled_x, scaled_y, scaled_w, scaled_h]
+    
+    def cleanup_proxy(self):
+        """Remove proxy file if it exists."""
+        if self.proxy_info and os.path.exists(self.proxy_info['path']):
+            try:
+                os.remove(self.proxy_info['path'])
+                print(f"🗑️ Removed proxy file: {self.proxy_info['path']}")
+            except OSError as e:
+                print(f"⚠️ Warning: Could not remove proxy file: {e}")
     
     def frame_generator(self):
         """Generator that yields frames from the video."""

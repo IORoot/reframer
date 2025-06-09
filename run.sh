@@ -66,7 +66,7 @@ WEIGHTED_CENTER=false
 BLEND_SALIENCY=false
 
 # Enable temporal smoothing for crop windows
-APPLY_SMOOTHING=true
+APPLY_SMOOTHING=false
 
 # Number of frames for temporal video smoothing
 SMOOTHING_WINDOW=30
@@ -78,7 +78,23 @@ POSITION_INERTIA=0.8
 SIZE_INERTIA=0.9
 
 # Enable debug mode
-DEBUG=false
+DEBUG=true
+
+# ╭──────────────────────────────────────────────────────────╮
+# │                      PROXY SETTINGS                      │
+# ╰──────────────────────────────────────────────────────────╯
+
+# Enable proxy video for faster processing
+USE_PROXY=false
+
+# Proxy video resolution (360p, 480p, 720p, 1080p, 25%, 50%)
+PROXY_RESOLUTION="720p"
+
+# Proxy video quality (low, medium, high)
+PROXY_QUALITY="medium"
+
+# Keep proxy file after processing (default: auto-remove)
+KEEP_PROXY=false
 
 # ╭──────────────────────────────────────────────────────────╮
 # │                          Usage.                          │
@@ -141,6 +157,16 @@ usage()
         printf "\tSize inertia weight (default: 0.9)\n\n"
         printf " --debug\n"
         printf "\tEnable debug mode (flag)\n\n"
+
+        printf "Proxy Video Options:\n"
+        printf " --use_proxy\n"
+        printf "\tEnable proxy video for faster processing (flag)\n\n"
+        printf " --proxy_resolution <RESOLUTION>\n"
+        printf "\tProxy resolution: 360p/480p/720p/1080p/25%%/50%% (default: 720p)\n\n"
+        printf " --proxy_quality <QUALITY>\n"
+        printf "\tProxy quality: low/medium/high (default: medium)\n\n"
+        printf " --keep_proxy\n"
+        printf "\tKeep proxy file after processing (flag, default: auto-remove)\n\n"
 
         exit 1
     fi
@@ -265,6 +291,24 @@ function arguments()
             DEBUG=true
             shift
             ;;
+        --use_proxy)
+            USE_PROXY=true
+            shift
+            ;;
+        --proxy_resolution)
+            PROXY_RESOLUTION="$2"
+            shift
+            shift
+            ;;
+        --proxy_quality)
+            PROXY_QUALITY="$2"
+            shift
+            shift
+            ;;
+        --keep_proxy)
+            KEEP_PROXY=true
+            shift
+            ;;
         -*|--*)
             echo "Unknown option $1"
             exit 1
@@ -344,6 +388,14 @@ function main()
     fi
     if [ "${DEBUG}" = true ]; then
         CMD="${CMD} --debug"
+    fi
+
+    # Add proxy options if enabled
+    if [ "${USE_PROXY}" = true ]; then
+        CMD="${CMD} --use_proxy --proxy_resolution ${PROXY_RESOLUTION} --proxy_quality ${PROXY_QUALITY}"
+        if [ "${KEEP_PROXY}" = true ]; then
+            CMD="${CMD} --keep_proxy"
+        fi
     fi
 
     echo "Processing:"
