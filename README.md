@@ -1,4 +1,4 @@
-![header](https://raw.githubusercontent.com/IORoot/reframer/refs/heads/master/header.png)
+![header](https://raw.githubusercontent.com/IORoot/reframer/refs/heads/master/header.jpg)
 
 # AI Video Reframe CLI
 
