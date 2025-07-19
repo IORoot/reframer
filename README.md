@@ -50,10 +50,6 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Install Node.js dependencies (for Python shell integration):
-```bash
-npm install
-```
 
 ## Run a single file
 
